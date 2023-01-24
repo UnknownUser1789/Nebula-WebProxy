@@ -1,28 +1,11 @@
 importScripts('/uv/uv.bundle.js');
 importScripts('/uv/uv.config.js');
 
-
 class UVServiceWorker extends EventEmitter {     
     constructor(config = __uv$config) {
         super();
-
-const dbPromise = Ultraviolet.openDB('keyval-store', 1, {
-  upgrade(db) {
-      db.createObjectStore('keyval');
-  },
-});
-
-function getBareLocation() {
-  return dbPromise.then(db => db.get('keyval', 'bareLocation')).then(value => value || '');
-}
-getBareLocation().then(bareLocation => {
-        if (!config.bare) config.bare = bareLocation;
-        this.addresses = Array.isArray(config.bare)
-        ? config.bare.map(str => new URL(str, location))
-        : typeof config.bare === 'string'
-            ? [new URL(config.bare, location)]
-            : [];
-});
+        if (!config.bare) config.bare = '/bare/';
+        this.addresses = typeof config.bare === 'string' ? [ new URL(config.bare, location) ] : config.bare.map(str => new URL(str, location));
         this.headers = {
             csp: [
                 'cross-origin-embedder-policy',
@@ -205,12 +188,8 @@ getBareLocation().then(bareLocation => {
             });
 
         } catch(err) {
-            console.error(err);
             return new Response(err.toString(), {
                 status: 500,
-                headers: {
-                    'x-uv-error': err,
-                }
             });
         };
     };
